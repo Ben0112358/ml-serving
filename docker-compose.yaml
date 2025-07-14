@@ -1,0 +1,11 @@
+services:
+  serving:
+    build:
+      context: .
+      dockerfile: Dockerfile.serving
+    volumes:
+      - "${ML_HOMELAB_ROOT}:${ML_HOMELAB_ROOT}:ro"
+    environment:
+      - ML_HOMELAB_ROOT=${ML_HOMELAB_ROOT}
+    ports:
+      - "8000:8000"
