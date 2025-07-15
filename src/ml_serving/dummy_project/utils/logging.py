@@ -3,6 +3,7 @@ import logging
 from datetime import datetime
 from ml_serving.config import LOGS_DIR
 
+
 def setup_logging():
     log_file_path = LOGS_DIR / f"{datetime.today().date()}.log"
 

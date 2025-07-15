@@ -1,9 +1,8 @@
-from ml_serving.config import LOGS_DIR
 import logging
-from datetime import datetime
 import subprocess
 import os
-from.utils import setup_logging
+from .utils import setup_logging
+
 
 def main():
     logger = logging.getLogger(__name__)

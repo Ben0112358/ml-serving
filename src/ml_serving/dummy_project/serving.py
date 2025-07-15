@@ -1,6 +1,5 @@
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse
 from fastapi.exception_handlers import request_validation_exception_handler
 from pydantic import BaseModel, field_validator
 from contextlib import asynccontextmanager
@@ -21,11 +20,19 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
+
 @app.exception_handler(RequestValidationError)
-async def validation_exception_handler(request: Request, exc: RequestValidationError):
-    app.state.logger.warning(f"Validation failed for request: {await request.body()}")
-    app.state.logger.warning(f"Validation errors: {exc.errors()}")
+async def validation_exception_handler(
+    request: Request, exc: RequestValidationError
+):
+
+    app.state.logger.error(
+        f"Validation failed for request: " f"{await request.body()}"
+    )
+
+    app.state.logger.error(f"Validation errors: {exc.errors()}")
     return await request_validation_exception_handler(request, exc)
+
 
 class ModelPredictRequest(BaseModel):
     data: list[float] | list[int]
@@ -47,7 +54,6 @@ async def predict(model_input: ModelPredictRequest, request: Request):
         return {"predictions": predictions.ravel().tolist()}
     except Exception as e:
         app.state.logger.info(
-            f"Predict failed for input: {model_input}. "
-            f"Error: {str(e)}"
-            )
+            f"Predict failed for input: {model_input}. " f"Error: {str(e)}"
+        )
         return {"error": str(e)}

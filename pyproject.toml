@@ -28,3 +28,9 @@ pytest = "^8.4.1"
 flake8 = "^7.3.0"
 black = "^25.1.0"
 
+[tool.black]
+line-length=79
+
+[tool.flake8]
+line-length=79
+
