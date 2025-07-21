@@ -2,10 +2,16 @@ services:
   serving:
     build:
       context: .
-      dockerfile: Dockerfile.serving
+      dockerfile: Dockerfile.dummy_project
     volumes:
       - "${ML_HOMELAB_ROOT}:${ML_HOMELAB_ROOT}:rw"
     environment:
       - ML_HOMELAB_ROOT=${ML_HOMELAB_ROOT}
     ports:
       - "8000:8000"
+    networks:
+      - dummy_project
+
+networks:
+  dummy_project:
+    external: true
