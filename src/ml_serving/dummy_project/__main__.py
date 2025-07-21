@@ -20,7 +20,7 @@ def main():
             "docker-compose.dummy_project.yaml",
             "up",
             "--build",
-            "-d"
+            "-d",
         ],
         env=env,
         check=True,
