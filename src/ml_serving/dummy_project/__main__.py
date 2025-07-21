@@ -1,7 +1,7 @@
 import logging
 import subprocess
 import os
-from .utils import setup_logging
+from ml_serving.utils import setup_logging
 
 
 def main():
@@ -12,7 +12,9 @@ def main():
     if "ML_HOMELAB_ROOT" not in env:
         raise RuntimeError("ML_HOMELAB_ROOT is not set in the environment.")
 
-    subprocess.run(["docker", "compose", "up", "--build"], env=env, check=True)
+    subprocess.run(
+        ["docker", "compose", "up", "--build", "-d"], env=env, check=True
+    )
 
 
 if __name__ == "__main__":

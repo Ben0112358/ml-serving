@@ -6,7 +6,7 @@ from contextlib import asynccontextmanager
 import joblib
 from ml_serving.config import MODEL_DIR
 import numpy as np
-from .utils import setup_logging
+from ml_serving.utils import setup_logging
 import logging
 
 
