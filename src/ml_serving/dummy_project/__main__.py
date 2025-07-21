@@ -13,7 +13,17 @@ def main():
         raise RuntimeError("ML_HOMELAB_ROOT is not set in the environment.")
 
     subprocess.run(
-        ["docker", "compose", "up", "--build", "-d"], env=env, check=True
+        [
+            "docker",
+            "compose",
+            "-f",
+            "docker-compose.dummy_project.yaml",
+            "up",
+            "--build",
+            "-d",
+        ],
+        env=env,
+        check=True,
     )
 
 
