@@ -11,7 +11,6 @@ ENV_VAR_OUTPUT_SUFFIX = os.environ["OUTPUT_SUFFIX"]
 ENV_VAR_CONFIG_PATH = pl.Path(os.environ["CONFIG_PATH"])
 
 
-
 if not ENV_VAR_CONFIG_PATH.exists():
     raise FileNotFoundError(
         f"{ENV_VAR_CONFIG_PATH} was expected, but does not exist. "

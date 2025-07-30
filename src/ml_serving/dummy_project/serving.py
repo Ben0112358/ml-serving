@@ -13,7 +13,9 @@ import logging
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     setup_logging()
-    app.state.model = joblib.load(MODEL_DIR / f"model_{ENV_VAR_OUTPUT_SUFFIX}.pkl")
+    app.state.model = joblib.load(
+        MODEL_DIR / f"model_{ENV_VAR_OUTPUT_SUFFIX}.pkl"
+    )
     app.state.logger = logging.getLogger(__name__)
     yield
 
