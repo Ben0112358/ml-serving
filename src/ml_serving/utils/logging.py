@@ -1,11 +1,10 @@
 # ml_serving/logging_utils.py
 import logging
-from datetime import datetime
-from ml_serving.config import LOGS_DIR
+from ml_serving.config import LOGS_DIR, ENV_VAR_OUTPUT_SUFFIX
 
 
 def setup_logging():
-    log_file_path = LOGS_DIR / f"{datetime.today().date()}.log"
+    log_file_path = LOGS_DIR / f"log_{ENV_VAR_OUTPUT_SUFFIX}.log"
 
     logger = logging.getLogger()
     logger.setLevel(logging.DEBUG)

@@ -4,7 +4,7 @@ from fastapi.exception_handlers import request_validation_exception_handler
 from pydantic import BaseModel, field_validator
 from contextlib import asynccontextmanager
 import joblib
-from ml_serving.config import MODEL_DIR
+from ml_serving.config import MODEL_DIR, ENV_VAR_OUTPUT_SUFFIX
 import numpy as np
 from ml_serving.utils import setup_logging
 import logging
@@ -13,7 +13,9 @@ import logging
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     setup_logging()
-    app.state.model = joblib.load(MODEL_DIR / "model.pkl")
+    app.state.model = joblib.load(
+        MODEL_DIR / f"model_{ENV_VAR_OUTPUT_SUFFIX}.pkl"
+    )
     app.state.logger = logging.getLogger(__name__)
     yield
 
