@@ -16,7 +16,7 @@ services:
       - TIMESTAMP=${TIMESTAMP}
       - OUTPUT_SUFFIX=${OUTPUT_SUFFIX}
     ports:
-      - "8000:8000"
+      - "${SERVING_PORT}:8000"
     networks: 
       - external_net
 
