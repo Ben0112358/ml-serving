@@ -5,13 +5,22 @@ services:
       dockerfile: Dockerfile.dummy_project
     volumes:
       - "${ML_HOMELAB_ROOT}:${ML_HOMELAB_ROOT}:rw"
+    image: "${PROJECT_NAME}_${MODE}_serving:latest"
+    env_file:
+      - "${ML_HOMELAB_ROOT}/.terraform_envs"
     environment:
       - ML_HOMELAB_ROOT=${ML_HOMELAB_ROOT}
+      - PROJECT_NAME=${PROJECT_NAME}
+      - MODE=${MODE}
+      - DOCKER_NETWORK_NAME=${DOCKER_NETWORK_NAME}
+      - TIMESTAMP=${TIMESTAMP}
+      - OUTPUT_SUFFIX=${OUTPUT_SUFFIX}
     ports:
       - "8000:8000"
-    networks:
-      - dummy_project
+    networks: 
+      - external_net
 
 networks:
-  dummy_project:
+  external_net:
     external: true
+    name: ${DOCKER_NETWORK_NAME}
