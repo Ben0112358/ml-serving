@@ -3,22 +3,31 @@ import yaml
 import os
 
 ENV_VAR_ML_HOMELAB_ROOT = pl.Path(os.environ["ML_HOMELAB_ROOT"])
-ENV_VAR_PROJECT_NAME = os.environ["PROJECT_NAME"]
-ENV_VAR_MODE = os.environ["MODE"]
-ENV_VAR_DOCKER_NETWORK_NAME = os.environ["DOCKER_NETWORK_NAME"]
-ENV_VAR_TIMESTAMP = os.environ["TIMESTAMP"]
 ENV_VAR_OUTPUT_SUFFIX = os.environ["OUTPUT_SUFFIX"]
-ENV_VAR_CONFIG_PATH = pl.Path(os.environ["CONFIG_PATH"])
 
 
-if not ENV_VAR_CONFIG_PATH.exists():
-    raise FileNotFoundError(
-        f"{ENV_VAR_CONFIG_PATH} was expected, but does not exist. "
-        f"See the README.md how this is created in a different infra repo."
-    )
+ENV_VAR_CONFIG_PATH = os.environ.get("CONFIG_PATH")
 
-with open(ENV_VAR_CONFIG_PATH) as f:
-    CONFIG = yaml.safe_load(f)
+CONFIG = {}
+if ENV_VAR_CONFIG_PATH and pl.Path(ENV_VAR_CONFIG_PATH).exists():
+    with open(ENV_VAR_CONFIG_PATH) as f:
+        CONFIG = yaml.safe_load(f)
 
-MODEL_DIR = pl.Path(CONFIG["paths"]["models"])
-LOGS_DIR = pl.Path(CONFIG["paths"]["serving_logs"])
+MODEL_DIR = pl.Path(
+    CONFIG.get("paths", {}).get("models")
+    or (ENV_VAR_ML_HOMELAB_ROOT / os.environ.get("MODEL_DIR", ""))
+)
+LOGS_DIR = pl.Path(
+    CONFIG.get("paths", {}).get("data_logs")
+    or (ENV_VAR_ML_HOMELAB_ROOT / os.environ.get("LOGS_DIR", ""))
+)
+
+for var_name, path in [
+    ("MODEL_DIR", MODEL_DIR),
+    ("LOGS_DIR", LOGS_DIR),
+]:
+    if path.name == "":
+        raise RuntimeError(
+            f"{var_name} must be set in CONFIG_PATH or "
+            f"as an environment variable."
+        )
