@@ -5,16 +5,16 @@ services:
       dockerfile: Dockerfile.dummy_project
     volumes:
       - "${ML_HOMELAB_ROOT}:${ML_HOMELAB_ROOT}:rw"
-    image: "${PROJECT_NAME}_${MODE}_serving:latest"
+    image: "${PROJECT_NAME:-dummy_project}_${MODE:-local}_serving:latest"
     env_file:
-      - "${ML_HOMELAB_ROOT}/.terraform_envs"
+      - path: "${ML_HOMELAB_ROOT}/.terraform_envs"
+        required: false
     environment:
       - ML_HOMELAB_ROOT=${ML_HOMELAB_ROOT}
-      - PROJECT_NAME=${PROJECT_NAME}
-      - MODE=${MODE}
       - DOCKER_NETWORK_NAME=${DOCKER_NETWORK_NAME}
-      - TIMESTAMP=${TIMESTAMP}
-      - OUTPUT_SUFFIX=${OUTPUT_SUFFIX}
+      - OUTPUT_SUFFIX=${OUTPUT_SUFFIX:-dummy_project_local}
+      - MODEL_DIR=${MODEL_DIR:-models}
+      - LOGS_DIR=${LOGS_DIR:-logs/serving}
     ports:
       - "${SERVING_PORT}:8000"
     networks: 
