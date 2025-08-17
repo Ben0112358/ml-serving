@@ -83,6 +83,7 @@ export OUTPUT_SUFFIX=some_suffix
 **Notes**:
 - The serving container exposes the API on `localhost:$SERVING_PORT`.  
 - This mode is a lightweight wrapper around docker-compose.<project_name>.yaml for convenience during development.
+- The image will have name `${PROJECT_NAME:-dummy_project}_${MODE:-local}_ui:latest`. If this is not what you want, you need to export `PROJECT_NAME` and `MODE` to suit your needs.
 
 ---
 
