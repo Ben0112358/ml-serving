@@ -10,7 +10,7 @@ def main():
             "docker-compose.investing_allocation_optimizer.yaml",
             "up",
             "--build",
-            "-d"
+            "-d",
         ],
     )
 

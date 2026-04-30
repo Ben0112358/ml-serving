@@ -7,24 +7,38 @@ import cloudpickle
 from ml_serving.config import MODEL_DIR, ENV_VAR_OUTPUT_SUFFIX
 import numpy as np
 from ml_serving.utils import setup_logging
-import ml_training
 import logging
-from typing import Callable, Union, Optional
+from typing import Union, Optional
 
 
 # ---- STATIC MODEL FOR SWAGGER (schema visible) ---- #
 class PredictArgs(BaseModel):
-    metric: str = Field("mean", description="Metric name (internally uses np.mean)")
-    p_1_constraint: Optional[float] = Field(None, description="Optional p1 constraint")
-    p_5_constraint: Optional[float] = Field(None, description="Optional p5 constraint")
-    max_std: Optional[float] = Field(None, description="Optional max std value")
-    n_trials: int = Field(100, description="Number of trials")
-    random_seed: Optional[int] = Field(None, description="Random seed for reproducibility")
-    bootstrap_block_size: Union[int, str] = Field(
-        "cube root", description="Bootstrap block size (integer or 'cube root')"
+    metric: str = Field(
+        "mean", description="Metric name (internally uses np.mean)"
     )
-    bootstrap_path_length: int = Field(100, description="Length of bootstrap path")
-    n_bootstrap_paths: int = Field(1000, description="Number of bootstrap paths")
+    p_1_constraint: Optional[float] = Field(
+        None, description="Optional p1 constraint"
+    )
+    p_5_constraint: Optional[float] = Field(
+        None, description="Optional p5 constraint"
+    )
+    max_std: Optional[float] = Field(
+        None, description="Optional max std value"
+    )
+    n_trials: int = Field(100, description="Number of trials")
+    random_seed: Optional[int] = Field(
+        None, description="Random seed for reproducibility"
+    )
+    bootstrap_block_size: Union[int, str] = Field(
+        "cube root",
+        description="Bootstrap block size (integer or 'cube root')",
+    )
+    bootstrap_path_length: int = Field(
+        100, description="Length of bootstrap path"
+    )
+    n_bootstrap_paths: int = Field(
+        1000, description="Number of bootstrap paths"
+    )
 
 
 class PredictRequest(BaseModel):
@@ -46,8 +60,12 @@ app = FastAPI(lifespan=lifespan)
 
 # ---- EXCEPTION HANDLER ---- #
 @app.exception_handler(RequestValidationError)
-async def validation_exception_handler(request: Request, exc: RequestValidationError):
-    app.state.logger.error(f"Validation failed for request: {await request.body()}")
+async def validation_exception_handler(
+    request: Request, exc: RequestValidationError
+):
+    app.state.logger.error(
+        f"Validation failed for request: {await request.body()}"
+    )
     app.state.logger.error(f"Validation errors: {exc.errors()}")
     return await request_validation_exception_handler(request, exc)
 
