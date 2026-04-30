@@ -1,0 +1,27 @@
+services:
+  serving:
+    build:
+      context: .
+      dockerfile: Dockerfile.investing_allocation_optimizer
+    volumes:
+      - "${ML_HOMELAB_ROOT}:${ML_HOMELAB_ROOT}:rw"
+      - "${ML_HOMELAB_ROOT}/ml-training:/app/ml_training:rw"
+    image: "${PROJECT_NAME:-investing_allocation_optimizer}_${MODE:-local}_serving:latest"
+    env_file:
+      - path: "${ML_HOMELAB_ROOT}/.terraform_envs"
+        required: false
+    environment:
+      - ML_HOMELAB_ROOT=${ML_HOMELAB_ROOT}
+      - DOCKER_NETWORK_NAME=${DOCKER_NETWORK_NAME}
+      - OUTPUT_SUFFIX=${OUTPUT_SUFFIX:-investing_allocation_optimizer_local}
+      - MODEL_DIR=${MODEL_DIR:-models}
+      - LOGS_DIR=${LOGS_DIR:-logs/serving}
+    ports:
+      - "${SERVING_PORT}:8000"
+    networks: 
+      - external_net
+
+networks:
+  external_net:
+    external: true
+    name: ${DOCKER_NETWORK_NAME}
