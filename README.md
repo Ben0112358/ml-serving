@@ -14,7 +14,7 @@ To get an overview of how all sub-repos in the full pipeline are tied together, 
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 ml-serving/
@@ -38,7 +38,7 @@ ml-serving/
 
 ---
 
-## ✅ Prerequisites
+## Prerequisites
 
 - **OS**: Linux or macOS  
 - **Docker**: Installed and running  
@@ -60,7 +60,7 @@ export SERVING_PORT=<port_number>
 
 ---
 
-## 🐳 Containerized run (more control)
+## Containerized run (more control)
 
 `ml-serving` can be run for example in the following way. You may add args as you see fit.
 
@@ -87,7 +87,7 @@ export OUTPUT_SUFFIX=some_suffix
 
 ---
 
-## 🐍 Python run (less control; simplified)
+## Python run (less control; simplified)
 
 Run `ml-serving` locally with sensible defaults:
 
@@ -114,7 +114,7 @@ Also here, the serving container exposes the API on `localhost:$SERVING_PORT`.
 
 ---
 
-## ➕ Adding a New Project
+## Adding a New Project
 1. Create a folder under `ml_serving/` with your project name:
 
 ```
@@ -136,7 +136,7 @@ src/ml_serving/<new_project>/
 
 ---
 
-## 🧪 Testing
+## Testing
 
 Run unit tests with Poetry:
 
