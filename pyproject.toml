@@ -2,7 +2,7 @@
 name = "ml-serving"
 version = "0.1.0"
 description = ""
-authors = ["Ben0112358 <benjaminringdahl@gmail.com>"]
+authors = ["Ben0112358"]
 readme = "README.md"
 
 packages = [
