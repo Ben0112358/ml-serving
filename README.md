@@ -146,4 +146,4 @@ poetry run pytest tests/
 
 ## CI
 
-Pull requests and pushes to `main` run lint (`black`, `flake8`), tests (`pytest`), and security checks (Gitleaks, CodeQL, Bandit, pip-audit). Dependabot opens weekly grouped updates for Python and GitHub Actions. Full scanner parity with `llm-decision-spec` (Trivy, Opengrep) is intentionally omitted here; core secret, dependency, and static analysis coverage is included.
+Pull requests and pushes to `main` run lint (`black`, `flake8`), tests (`pytest`), and security checks (Gitleaks, Trivy, CodeQL, Bandit, pip-audit). Trivy, Bandit, and pip-audit **fail the workflow only on HIGH/CRITICAL** findings; fix versions are bumped in `pyproject.toml` when advisories require it. Dependabot opens weekly grouped updates for Python and GitHub Actions.

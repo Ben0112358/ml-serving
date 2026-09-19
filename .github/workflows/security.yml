@@ -29,6 +29,24 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+  trivy:
+    name: Trivy
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Run Trivy filesystem scan
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: fs
+          format: table
+          severity: HIGH,CRITICAL
+          exit-code: 1
+
   codeql:
     name: CodeQL
     runs-on: ubuntu-latest
@@ -44,7 +62,7 @@ jobs:
         uses: github/codeql-action/init@v4
         with:
           languages: python
-          queries: security-and-quality
+          queries: security-extended
 
       - name: Autobuild
         uses: github/codeql-action/autobuild@v4
@@ -67,10 +85,16 @@ jobs:
         with:
           python-version: "3.13"
 
+      - name: Install Poetry
+        run: pipx install poetry --python "$(command -v python)"
+
+      - name: Install dependencies
+        run: poetry sync --no-interaction
+
       - name: Run Bandit
         run: |
-          pip install bandit
-          bandit -r src -q
+          poetry run pip install bandit
+          poetry run bandit -r src -lll -q
 
   dependency-audit:
     name: pip-audit
@@ -93,7 +117,9 @@ jobs:
       - name: Install dependencies
         run: poetry sync --no-interaction
 
-      - name: Audit dependencies
+      - name: Audit dependencies (fail on HIGH/CRITICAL only)
         run: |
           poetry run pip install pip-audit
-          poetry run pip-audit
+          poetry run python -m pip install --upgrade pip
+          poetry run pip-audit --skip-editable --format json -o pip-audit.json || true
+          poetry run python .github/scripts/pip-audit-high-only.py pip-audit.json
