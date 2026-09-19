@@ -1,29 +1,56 @@
-name: Python CI
+name: Linting and testing
 
 on:
   pull_request:
+  push:
+    branches:
+      - main
 
 jobs:
-  test:
+  lint:
+    name: Lint
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v7
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v7
         with:
-          python-version: '3.12.3'
+          python-version: "3.13"
+
+      - name: Install Poetry
+        run: pipx install poetry --python "$(command -v python)"
 
       - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install black flake8 pytest pyyaml
+        run: poetry sync --no-interaction
 
       - name: Check Black formatting
-        run: black --check .
+        run: poetry run black --check .
 
       - name: Run Flake8
-        run: flake8 .
+        run: poetry run flake8 .
 
-      - name: Run tests with pytest
-        run: pytest
+
+  test:
+    name: Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+
+      - name: Install Poetry
+        run: pipx install poetry --python "$(command -v python)"
+
+      - name: Install dependencies
+        run: poetry sync --no-interaction
+
+      - name: Run tests
+        run: poetry run pytest -q
