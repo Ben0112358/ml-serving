@@ -21,13 +21,10 @@ jobs:
           python-version: "3.13"
 
       - name: Install Poetry
-        run: pip install poetry
-
-      - name: Configure Poetry
-        run: poetry config virtualenvs.create false
+        run: pipx install poetry --python "$(command -v python)"
 
       - name: Install dependencies
-        run: poetry install --no-interaction --no-ansi --sync
+        run: poetry sync --no-interaction
 
       - name: Check Black formatting
         run: poetry run black --check .
@@ -50,13 +47,10 @@ jobs:
           python-version: "3.13"
 
       - name: Install Poetry
-        run: pip install poetry
-
-      - name: Configure Poetry
-        run: poetry config virtualenvs.create false
+        run: pipx install poetry --python "$(command -v python)"
 
       - name: Install dependencies
-        run: poetry install --no-interaction --no-ansi --sync
+        run: poetry sync --no-interaction
 
       - name: Run tests
         run: poetry run pytest -q

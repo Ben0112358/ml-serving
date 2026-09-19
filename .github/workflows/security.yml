@@ -88,14 +88,12 @@ jobs:
           python-version: "3.13"
 
       - name: Install Poetry
-        run: pip install poetry
+        run: pipx install poetry --python "$(command -v python)"
 
       - name: Install dependencies
-        run: |
-          poetry config virtualenvs.create false
-          poetry install --no-interaction --no-ansi --sync
+        run: poetry sync --no-interaction
 
       - name: Audit dependencies
         run: |
-          pip install pip-audit
-          pip-audit
+          poetry run pip install pip-audit
+          poetry run pip-audit
