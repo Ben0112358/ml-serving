@@ -28,7 +28,8 @@ EXPOSE 8000
 CMD ["/bin/bash", "-c", "\
     if [ \"$MODE\" != \"prod\" ]; then \
         poetry config virtualenvs.create false && \
-        poetry install --no-interaction --no-ansi --directory $ML_HOMELAB_ROOT/ml-training; \
+        poetry install --no-interaction --no-ansi --directory $ML_HOMELAB_ROOT/ml-training && \
+        pip install --no-cache-dir 'typing_extensions>=4.16.0'; \
     fi && \
     python -u -m uvicorn src.ml_serving.investing_allocation_optimizer.serving:app \
         --host 0.0.0.0 --port 8000"]
