@@ -42,7 +42,7 @@ ml-serving/
 
 - **OS**: Linux or macOS  
 - **Docker**: Installed and running  
-- **Python**: 3.12+  
+- **Python**: 3.13 (`>=3.13,<3.14`); use `poetry install --sync`  
 - **Poetry**: For dependency management  
 
 Set the base directory where shared ML assets and configs are stored:
@@ -143,3 +143,7 @@ Run unit tests with Poetry:
 ```bash
 poetry run pytest tests/
 ```
+
+## CI
+
+Pull requests and pushes to `main` run lint (`black`, `flake8`), tests (`pytest`), and security checks (Gitleaks, CodeQL, Bandit, pip-audit). Dependabot opens weekly grouped updates for Python and GitHub Actions. Full scanner parity with `llm-decision-spec` (Trivy, Opengrep) is intentionally omitted here; core secret, dependency, and static analysis coverage is included.
