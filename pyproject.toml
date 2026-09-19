@@ -32,8 +32,7 @@ requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.black]
-line-length=79
+line-length = 79
 
-[tool.flake8]
-line-length=79
-
+[tool.pytest.ini_options]
+pythonpath = ["src"]
