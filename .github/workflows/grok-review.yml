@@ -1,8 +1,8 @@
 name: Grok PR review trigger
 
 on:
-  pull_request_target:
-    types: [opened, reopened]
+  pull_request:
+    types: [opened, reopened, synchronize]
   issue_comment:
     types: [created]
 
@@ -11,10 +11,10 @@ permissions: {}
 jobs:
   notify:
     if: >-
-      github.event_name == 'pull_request_target' ||
+      github.event_name == 'pull_request' ||
       (github.event.issue.pull_request &&
        github.event.comment.user.login == 'Ben0112358' &&
-       contains(toLower(github.event.comment.body), '/grok review'))
+       contains(github.event.comment.body, '/grok review'))
     runs-on: ubuntu-latest
     steps:
       - name: Notify AI Agent reviewer
@@ -23,7 +23,7 @@ jobs:
           WEBHOOK_AUTH: ${{ secrets.GROK_REVIEW_WEBHOOK_AUTH }}
           REPO: ${{ github.repository }}
           PR: ${{ github.event.pull_request.number || github.event.issue.number }}
-          EVENT: ${{ github.event_name == 'pull_request_target' && 'pr-opened' || 'pr-comment' }}
+          EVENT: ${{ github.event_name == 'pull_request' && 'pr-opened' || 'pr-comment' }}
           COMMENT_ID: ${{ github.event.comment.id }}
         run: |
           payload=$(jq -n --arg repo "$REPO" --arg pr "$PR" --arg event "$EVENT" --arg comment_id "$COMMENT_ID" \
