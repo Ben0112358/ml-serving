@@ -1,0 +1,38 @@
+name: Grok PR review trigger
+
+on:
+  pull_request:
+    types: [opened, reopened]
+  issue_comment:
+    types: [created]
+
+permissions: {}
+
+jobs:
+  notify:
+    if: >-
+      github.event_name == 'pull_request' ||
+      (github.event.issue.pull_request &&
+       github.event.comment.user.login == 'Ben0112358' &&
+       contains(github.event.comment.body, '/grok review'))
+    runs-on: ubuntu-latest
+    steps:
+      - name: Notify AI Agent reviewer
+        env:
+          WEBHOOK_URL: ${{ secrets.GROK_REVIEW_WEBHOOK_URL }}
+          WEBHOOK_AUTH: ${{ secrets.GROK_REVIEW_WEBHOOK_AUTH }}
+          REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number || github.event.issue.number }}
+          EVENT: ${{ github.event_name == 'pull_request' && 'pr-opened' || 'pr-comment' }}
+          COMMENT_ID: ${{ github.event.comment.id }}
+        run: |
+          if [ -z "$WEBHOOK_URL" ] || [ -z "$WEBHOOK_AUTH" ]; then
+            echo "Review webhook secrets are not available for this run; skipping."
+            exit 0
+          fi
+          payload=$(jq -n --arg repo "$REPO" --arg pr "$PR" --arg event "$EVENT" --arg comment_id "$COMMENT_ID" \
+            '{repo:$repo, pr:($pr|tonumber), event:$event, comment_id:$comment_id}')
+          curl -fsS -X POST "$WEBHOOK_URL" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: $WEBHOOK_AUTH" \
+            -d "$payload"

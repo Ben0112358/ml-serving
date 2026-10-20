@@ -136,6 +136,12 @@ src/ml_serving/<new_project>/
 
 ---
 
+## board_meeting_protocol
+
+Text is extracted from `.docx`, `.pdf`, and `.odt`. Writing returns a new file of the same type as the new input. When a finished protocol is available, that file's font, font style, and margins are applied. Logos and tables are not copied. Reviewing returns short copyable feedback text, as a nested list of edits. Nothing is sent. History rows are optional; a row that is sent needs its first two documents. Optional review feedback is pasted text, not a file. Jobs are asynchronous: `POST /jobs`, then poll or cancel. While a job runs, its trace lists each model call, any thinking text, the reply, and the history-row text sent to the orchestrator.
+
+The default model backend is any OpenAI-compatible chat API. Set `OPENAI_BASE_URL`, `OPENAI_API_KEY`, and `OPENAI_MODEL`. A second backend is listed by `GET /options` when `CURSOR_API_KEY` is set. That request can also carry a model id for the history rows and a different model id for the orchestrator.
+
 ## Testing
 
 Run unit tests with Poetry:

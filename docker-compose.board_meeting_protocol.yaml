@@ -1,0 +1,32 @@
+services:
+  serving:
+    build:
+      context: .
+      dockerfile: Dockerfile.board_meeting_protocol
+    volumes:
+      - "${ML_HOMELAB_ROOT}:${ML_HOMELAB_ROOT}:rw"
+      - "${ML_HOMELAB_ROOT}/ml-training:/app/ml_training:rw"
+    image: "${PROJECT_NAME:-board_meeting_protocol}_${MODE:-local}_serving:latest"
+    env_file:
+      - path: "${ML_HOMELAB_ROOT}/.terraform_envs"
+        required: false
+    environment:
+      - ML_HOMELAB_ROOT=${ML_HOMELAB_ROOT}
+      - DOCKER_NETWORK_NAME=${DOCKER_NETWORK_NAME}
+      - OUTPUT_SUFFIX=${OUTPUT_SUFFIX:-board_meeting_protocol_local}
+      - MODEL_DIR=${MODEL_DIR:-models}
+      - LOGS_DIR=${LOGS_DIR:-logs/serving}
+      - MODE=${MODE:-dev}
+      - OPENAI_BASE_URL=${OPENAI_BASE_URL:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - OPENAI_MODEL=${OPENAI_MODEL:-}
+      - CURSOR_API_KEY=${CURSOR_API_KEY:-}
+    ports:
+      - "${SERVING_PORT}:8000"
+    networks: 
+      - external_net
+
+networks:
+  external_net:
+    external: true
+    name: ${DOCKER_NETWORK_NAME}
