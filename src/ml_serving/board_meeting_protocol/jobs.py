@@ -4,6 +4,9 @@ from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from typing import Any
 
+_MAX_JOBS = 100
+_FINISHED = {"completed", "failed", "cancelled"}
+
 
 @dataclass
 class JobRecord:
@@ -25,6 +28,13 @@ class JobStore:
     def create(self) -> JobRecord:
         record = JobRecord(job_id=str(uuid.uuid4()))
         with self._lock:
+            finished = [
+                job_id
+                for job_id, job in self._jobs.items()
+                if job.status in _FINISHED
+            ]
+            while len(self._jobs) >= _MAX_JOBS and finished:
+                del self._jobs[finished.pop(0)]
             self._jobs[record.job_id] = record
         return record
 

@@ -125,6 +125,61 @@ def _backend(name: str):
     return model
 
 
+def _run_job(record, writer, backend, body: JobIn, rows, new_text, logger):
+    if record.cancel_event.is_set():
+        record.status = "cancelled"
+        return
+
+    def progress(event: dict) -> None:
+        if record.cancel_event.is_set():
+            raise RuntimeError("cancelled")
+        job_store.note(record, event)
+
+    record.status = "running"
+    try:
+        document_body = writer.predict(
+            backend,
+            mode=body.mode,
+            rows=rows,
+            new_text=new_text,
+            orchestrator_note=body.orchestrator_note,
+            row_model=body.row_model,
+            orchestrator_model=body.orchestrator_model,
+            progress=progress,
+        )
+        if record.cancel_event.is_set():
+            record.status = "cancelled"
+            return
+        if body.mode == "reviewing":
+            record.result = {"kind": "text", "text": document_body}
+        else:
+            template_name, template = _style_template(
+                body.rows,
+                body.new_input.filename,
+            )
+            raw, media = build_document(
+                body.new_input.filename,
+                document_body,
+                template_name,
+                template,
+            )
+            record.result = {
+                "kind": "file",
+                "filename": body.new_input.filename,
+                "media_type": media,
+                "content_base64": base64.b64encode(raw).decode("ascii"),
+            }
+        record.status = "completed"
+        record.message = "Done"
+    except Exception as exc:
+        if record.cancel_event.is_set() or record.status == "cancelled":
+            record.status = "cancelled"
+            return
+        logger.exception("Job %s failed", record.job_id)
+        record.status = "failed"
+        record.error = str(exc)
+
+
 def _options() -> dict:
     openai = OpenAICompatibleModel()
     cursor = CursorLocalModel()
@@ -181,56 +236,9 @@ async def create_job(body: JobIn):
             rows.append(parsed)
     new_text = _text_of(body.new_input)
     record = job_store.create()
-
-    def progress(event: dict) -> None:
-        if record.cancel_event.is_set():
-            raise RuntimeError("cancelled")
-        job_store.note(record, event)
-
-    def worker() -> None:
-        record.status = "running"
-        try:
-            document_body = writer.predict(
-                backend,
-                mode=body.mode,
-                rows=rows,
-                new_text=new_text,
-                orchestrator_note=body.orchestrator_note,
-                row_model=body.row_model,
-                orchestrator_model=body.orchestrator_model,
-                progress=progress,
-            )
-            if record.cancel_event.is_set():
-                record.status = "cancelled"
-                return
-            if body.mode == "reviewing":
-                record.result = {"kind": "text", "text": document_body}
-            else:
-                template_name, template = _style_template(
-                    body.rows,
-                    body.new_input.filename,
-                )
-                raw, media = build_document(
-                    body.new_input.filename,
-                    document_body,
-                    template_name,
-                    template,
-                )
-                record.result = {
-                    "kind": "file",
-                    "filename": body.new_input.filename,
-                    "media_type": media,
-                    "content_base64": base64.b64encode(raw).decode("ascii"),
-                }
-            record.status = "completed"
-            record.message = "Done"
-        except Exception as exc:
-            logger.exception("Job %s failed", record.job_id)
-            if record.status != "cancelled":
-                record.status = "failed"
-                record.error = str(exc)
-
-    job_store.submit(worker)
+    job_store.submit(
+        lambda: _run_job(record, writer, backend, body, rows, new_text, logger)
+    )
     return {"job_id": record.job_id}
 
 
