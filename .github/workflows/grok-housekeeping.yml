@@ -1,0 +1,88 @@
+name: Grok repo housekeeping
+
+on:
+  schedule:
+    - cron: "37 5 * * 1" # security
+    - cron: "37 5 * * 2" # docs
+    - cron: "37 5 * * 3" # errors
+    - cron: "37 5 * * 4" # dependencies
+    - cron: "37 5 * * 5" # style
+    - cron: "37 5 * * 6" # tests
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: Housekeeping mode
+        required: true
+        type: choice
+        options: [security, docs, errors, dependencies, style, tests]
+
+permissions: {}
+
+concurrency:
+  group: grok-repo-housekeeping
+  cancel-in-progress: false
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Pick mode
+        id: mode
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_MODE: ${{ inputs.mode }}
+          SCHEDULE: ${{ github.event.schedule }}
+        run: |
+          set -euo pipefail
+          mode=""
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            mode="$INPUT_MODE"
+          else
+            case "$SCHEDULE" in
+              "37 5 * * 1") mode=security ;;
+              "37 5 * * 2") mode=docs ;;
+              "37 5 * * 3") mode=errors ;;
+              "37 5 * * 4") mode=dependencies ;;
+              "37 5 * * 5") mode=style ;;
+              "37 5 * * 6") mode=tests ;;
+              *)
+                echo "No housekeeping mode for this schedule"
+                exit 1
+                ;;
+            esac
+          fi
+          if [ -z "$mode" ]; then
+            echo "No housekeeping mode for this event"
+            exit 1
+          fi
+          echo "Selected mode: $mode"
+          echo "mode=$mode" >> "$GITHUB_OUTPUT"
+
+      - name: Call Grok housekeeper
+        env:
+          WEBHOOK_URL: ${{ secrets.GROK_HOUSEKEEPER_WEBHOOK_URL }}
+          WEBHOOK_AUTH: ${{ secrets.GROK_HOUSEKEEPER_WEBHOOK_AUTH }}
+          REPO: ${{ github.repository }}
+          MODE: ${{ steps.mode.outputs.mode }}
+          SHA: ${{ github.sha }}
+          EVENT: ${{ github.event_name }}
+        run: |
+          set -euo pipefail
+          if [ -z "$WEBHOOK_URL" ] || [ -z "$WEBHOOK_AUTH" ]; then
+            echo "Housekeeper webhook secrets are not set."
+            exit 1
+          fi
+          payload=$(jq -nc \
+            --arg repo "$REPO" \
+            --arg mode "$MODE" \
+            --arg sha "$SHA" \
+            --arg event "$EVENT" \
+            '{repo:$repo, mode:$mode, sha:$sha, event:$event}')
+          curl -sS --fail-with-body \
+            --retry 3 --retry-delay 15 \
+            --max-time 30 --retry-max-time 120 \
+            -X POST "$WEBHOOK_URL" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: $WEBHOOK_AUTH" \
+            -d "$payload"
