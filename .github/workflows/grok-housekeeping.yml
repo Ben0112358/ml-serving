@@ -2,12 +2,8 @@ name: Grok repo housekeeping
 
 on:
   schedule:
-    - cron: "37 5 * * 1" # security
-    - cron: "37 5 * * 2" # docs
-    - cron: "37 5 * * 3" # errors
-    - cron: "37 5 * * 4" # dependencies
-    - cron: "37 5 * * 5" # style
-    - cron: "37 5 * * 6" # tests
+    # One UTC day in three. A day-of-month step bunches runs at month boundaries.
+    - cron: "37 5 * * *"
   workflow_dispatch:
     inputs:
       mode:
@@ -32,34 +28,29 @@ jobs:
         env:
           EVENT_NAME: ${{ github.event_name }}
           INPUT_MODE: ${{ inputs.mode }}
-          SCHEDULE: ${{ github.event.schedule }}
         run: |
           set -euo pipefail
-          mode=""
           if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
-            mode="$INPUT_MODE"
-          else
-            case "$SCHEDULE" in
-              "37 5 * * 1") mode=security ;;
-              "37 5 * * 2") mode=docs ;;
-              "37 5 * * 3") mode=errors ;;
-              "37 5 * * 4") mode=dependencies ;;
-              "37 5 * * 5") mode=style ;;
-              "37 5 * * 6") mode=tests ;;
-              *)
-                echo "No housekeeping mode for this schedule"
-                exit 1
-                ;;
-            esac
+            if [ -z "$INPUT_MODE" ]; then
+              echo "No housekeeping mode for this event"
+              exit 1
+            fi
+            echo "Selected mode: $INPUT_MODE"
+            echo "mode=$INPUT_MODE" >> "$GITHUB_OUTPUT"
+            exit 0
           fi
-          if [ -z "$mode" ]; then
-            echo "No housekeeping mode for this event"
-            exit 1
+          day=$(( $(date -u +%s) / 86400 ))
+          if [ $(( day % 3 )) -ne 0 ]; then
+            echo "Not a housekeeping day, skipping."
+            exit 0
           fi
+          modes=(security docs errors dependencies style tests)
+          mode="${modes[$(( (day / 3) % 6 ))]}"
           echo "Selected mode: $mode"
           echo "mode=$mode" >> "$GITHUB_OUTPUT"
 
       - name: Call Grok housekeeper
+        if: ${{ steps.mode.outputs.mode != '' }}
         env:
           WEBHOOK_URL: ${{ secrets.GROK_HOUSEKEEPER_WEBHOOK_URL }}
           WEBHOOK_AUTH: ${{ secrets.GROK_HOUSEKEEPER_WEBHOOK_AUTH }}
