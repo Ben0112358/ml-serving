@@ -3,9 +3,10 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.board_meeting_protocol
+      additional_contexts:
+        ml_training: ${ML_WORKSPACE_ROOT}/ml-training
     volumes:
       - "${ML_HOMELAB_ROOT}:${ML_HOMELAB_ROOT}:rw"
-      - "${ML_HOMELAB_ROOT}/ml-training:/app/ml_training:rw"
     image: "${PROJECT_NAME:-board_meeting_protocol}_${MODE:-local}_serving:latest"
     env_file:
       - path: "${ML_HOMELAB_ROOT}/.terraform_envs"

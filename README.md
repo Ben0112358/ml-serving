@@ -84,6 +84,7 @@ export OUTPUT_SUFFIX=some_suffix
 - The serving container exposes the API on `localhost:$SERVING_PORT`.  
 - This mode is a lightweight wrapper around docker-compose.<project_name>.yaml for convenience during development.
 - The image will have name `${PROJECT_NAME:-<project_name>}_${MODE:-local}_serving:latest`. If this is not what you want, you need to export `PROJECT_NAME` and `MODE` to suit your needs.
+- The image installs `ml-training` from `$ML_WORKSPACE_ROOT/ml-training` at build time. A dev pipeline run uses the copied local checkout. A prod run uses the cloned GitHub `main`. A direct compose build needs `ML_WORKSPACE_ROOT` set to the parent of the checkouts.
 
 ---
 

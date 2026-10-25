@@ -3,6 +3,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.dummy_project
+      additional_contexts:
+        ml_training: ${ML_WORKSPACE_ROOT}/ml-training
     volumes:
       - "${ML_HOMELAB_ROOT}:${ML_HOMELAB_ROOT}:rw"
     image: "${PROJECT_NAME:-dummy_project}_${MODE:-local}_serving:latest"

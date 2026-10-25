@@ -20,16 +20,14 @@ RUN apt-get update && apt-get install -y curl \
 
 COPY --from=builder /usr/local /usr/local
 COPY --from=builder /app /app
+COPY --from=ml_training . /opt/ml-training
 
 ENV PYTHONPATH=/app:$PYTHONPATH
 
+RUN poetry config virtualenvs.create false \
+    && poetry install --no-interaction --no-ansi --directory /opt/ml-training \
+    && pip install --no-cache-dir 'typing_extensions>=4.16.0'
+
 EXPOSE 8000
 
-CMD ["/bin/bash", "-c", "\
-    if [ \"$MODE\" != \"prod\" ]; then \
-        poetry config virtualenvs.create false && \
-        poetry install --no-interaction --no-ansi --directory $ML_HOMELAB_ROOT/ml-training && \
-        pip install --no-cache-dir 'typing_extensions>=4.16.0'; \
-    fi && \
-    python -u -m uvicorn src.ml_serving.investing_allocation_optimizer.serving:app \
-        --host 0.0.0.0 --port 8000"]
+CMD ["python", "-u", "-m", "uvicorn", "src.ml_serving.investing_allocation_optimizer.serving:app", "--host", "0.0.0.0", "--port", "8000"]
