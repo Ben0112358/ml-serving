@@ -69,7 +69,14 @@ def _decode(part: FilePart) -> bytes:
 def _text_of(part: FilePart | None) -> str:
     if part is None:
         return ""
-    return extract_text(part.filename, _decode(part))
+    data = _decode(part)
+    try:
+        return extract_text(part.filename, data)
+    except Exception as exc:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Could not read {part.filename}",
+        ) from exc
 
 
 def _parse_row(row: RowIn) -> dict | None:
