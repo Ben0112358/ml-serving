@@ -1,5 +1,7 @@
 import base64
+import io
 import logging
+import zipfile
 from contextlib import asynccontextmanager
 from typing import Literal
 
@@ -22,6 +24,9 @@ from ml_serving.config import ENV_VAR_OUTPUT_SUFFIX, MODEL_DIR
 from ml_serving.utils import setup_logging
 
 MAX_FILE_BYTES = 5_000_000
+MAX_UNCOMPRESSED_BYTES = 10 * MAX_FILE_BYTES
+MAX_ARCHIVE_MEMBERS = 1_000
+ARCHIVE_SUFFIXES = {".docx", ".odt"}
 MAX_ROWS = 3
 job_store = JobStore()
 
@@ -60,10 +65,27 @@ def _decode(part: FilePart) -> bytes:
     if len(data) > MAX_FILE_BYTES:
         raise HTTPException(status_code=400, detail="File is too large")
     try:
-        suffix_of(part.filename)
+        suffix = suffix_of(part.filename)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
+    if suffix in ARCHIVE_SUFFIXES and not _archive_within_limits(data):
+        raise HTTPException(
+            status_code=400,
+            detail=f"Could not read {part.filename}",
+        )
     return data
+
+
+def _archive_within_limits(data: bytes) -> bool:
+    try:
+        with zipfile.ZipFile(io.BytesIO(data)) as archive:
+            members = archive.infolist()
+    except zipfile.BadZipFile:
+        return False
+    if len(members) > MAX_ARCHIVE_MEMBERS:
+        return False
+    total = sum(member.file_size for member in members)
+    return total <= MAX_UNCOMPRESSED_BYTES
 
 
 def _text_of(part: FilePart | None) -> str:
