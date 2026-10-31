@@ -18,8 +18,8 @@ To get an overview of how all sub-repos in the full pipeline are tied together, 
 
 ```
 ml-serving/
-├── docker-compose.dummy_project.yaml   # Docker Compose file for containerized run
-├── Dockerfile.dummy_project            # Dockerfile for containerized project
+├── docker-compose.<project_name>.yaml  # Docker Compose file per project
+├── Dockerfile.<project_name>           # Dockerfile per project
 ├── LICENSE
 ├── poetry.lock
 ├── pyproject.toml
@@ -27,13 +27,14 @@ ml-serving/
 ├── src/
 │   └── ml_serving/
 │       ├── config.py                   # Global configuration (paths, suffixes)
-│       ├── dummy_project/
+│       ├── dummy_project/              # Minimal example project
 │       │   ├── serving.py              # Core serving logic (API endpoints)
-│       │   ├── utils/                  # Project-specific helpers
 │       │   ├── __main__.py             # Local dev CLI entrypoint
 │       │   └── __init__.py
-│       └── utils/                      # Shared utils (logging, metrics, etc.)
-└── tests/                              # Unit tests
+│       ├── board_meeting_protocol/     # Board meeting protocol project
+│       ├── investing_allocation_optimizer/  # Investing allocation optimizer project
+│       └── utils/                      # Shared utils (logging)
+└── tests/                              # Unit tests, mirroring src/ml_serving/
 ```
 
 ---
@@ -125,7 +126,6 @@ src/ml_serving/<new_project>/
 2. Implement the modules (mirroring `dummy_project`):
 
 - `serving.py` → core serving logic (API endpoints)  
-- `utils/` → project-specific utils
 - `__main__.py` → optional CLI entrypoint for local dev  
 - `__init__.py` → marks the package  
 
