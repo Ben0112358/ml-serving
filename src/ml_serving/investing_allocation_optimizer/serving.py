@@ -101,6 +101,59 @@ def _run_predict(
     )
 
 
+def _run_job(
+    rec,
+    model: Any,
+    body: OptimizeRequest,
+    bounds: dict[str, tuple[float, float]] | None,
+    logger: logging.Logger,
+) -> None:
+    if rec.cancel_event.is_set():
+        rec.status = "cancelled"
+        return
+
+    rec.status = "running"
+    lock = threading.Lock()
+
+    def progress(trial: int, value: float, best: float) -> None:
+        with lock:
+            rec.trials_done = trial + 1
+            rec.best_value = best
+            rec.history.append(
+                {
+                    "trial": float(trial),
+                    "value": value,
+                    "best_value": best,
+                }
+            )
+        if rec.cancel_event.is_set():
+            return
+
+    try:
+        result = _run_predict(
+            model,
+            body,
+            progress_callback=progress,
+            cancel_event=rec.cancel_event,
+            weight_bounds=bounds,
+        )
+        if rec.cancel_event.is_set():
+            rec.status = "cancelled"
+        else:
+            rec.result = result
+            rec.best_value = result.get("metric_value")
+            rec.history = result.get("history", rec.history)
+            rec.trials_done = result.get("trials_completed", rec.trials_done)
+            rec.status = "completed"
+    except Exception as exc:
+        if rec.cancel_event.is_set() or rec.status == "cancelled":
+            rec.status = "cancelled"
+            return
+        logger.exception("Job %s failed", rec.job_id)
+        rec.status = "failed"
+        rec.error = str(exc)
+
+
 job_store = JobStore()
 
 
@@ -161,49 +214,10 @@ async def create_job(request: Request, body: OptimizeRequest):
         raise
 
     rec = store.create(n_trials=body.n_trials)
-
-    def worker() -> None:
-        rec.status = "running"
-        lock = threading.Lock()
-
-        def progress(trial: int, value: float, best: float) -> None:
-            with lock:
-                rec.trials_done = trial + 1
-                rec.best_value = best
-                rec.history.append(
-                    {
-                        "trial": float(trial),
-                        "value": value,
-                        "best_value": best,
-                    }
-                )
-            if rec.cancel_event.is_set():
-                return
-
-        try:
-            result = _run_predict(
-                model,
-                body,
-                progress_callback=progress,
-                cancel_event=rec.cancel_event,
-                weight_bounds=bounds,
-            )
-            if rec.cancel_event.is_set():
-                rec.status = "cancelled"
-            else:
-                rec.result = result
-                rec.best_value = result.get("metric_value")
-                rec.history = result.get("history", rec.history)
-                rec.trials_done = result.get(
-                    "trials_completed", rec.trials_done
-                )
-                rec.status = "completed"
-        except Exception as exc:
-            logger.exception("Job %s failed", rec.job_id)
-            rec.status = "failed"
-            rec.error = str(exc)
-
-    store.submit(rec.job_id, worker)
+    store.submit(
+        rec.job_id,
+        lambda: _run_job(rec, model, body, bounds, logger),
+    )
     return JobCreateResponse(job_id=rec.job_id)
 
 
