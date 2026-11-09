@@ -126,8 +126,6 @@ def _run_job(
                     "best_value": best,
                 }
             )
-        if rec.cancel_event.is_set():
-            return
 
     try:
         result = _run_predict(
@@ -208,10 +206,7 @@ async def create_job(request: Request, body: OptimizeRequest):
     model = request.app.state.model
     logger = request.app.state.logger
 
-    try:
-        bounds = _weight_bounds_dict(body)
-    except HTTPException:
-        raise
+    bounds = _weight_bounds_dict(body)
 
     rec = store.create(n_trials=body.n_trials)
     store.submit(
