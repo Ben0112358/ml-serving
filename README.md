@@ -143,6 +143,10 @@ Text is extracted from `.docx`, `.pdf`, and `.odt`. Writing returns a new file o
 
 The default model backend is any OpenAI-compatible chat API. Set `OPENAI_BASE_URL`, `OPENAI_API_KEY`, and `OPENAI_MODEL`. A second backend is listed by `GET /options` when `CURSOR_API_KEY` is set. That request can also carry a model id for the history rows and a different model id for the orchestrator.
 
+## investing_allocation_optimizer
+
+Serves a portfolio allocation optimizer trained in `ml-training`. At startup it loads `model_$OUTPUT_SUFFIX.pkl` from `MODEL_DIR`. `GET /options` lists the available metrics, the assets, and the default request values. Optimizations are asynchronous jobs: `POST /jobs` returns a `job_id`, `GET /jobs/{job_id}` polls it, and `DELETE /jobs/{job_id}` cancels it. A job's status is `queued`, `running`, `completed`, `failed`, or `cancelled`; while it runs, the response shows trials done, the best value so far, and the trial history, and the final result is included once it completes. A request can set the metric, the number of trials (1 to 5000, default 100), the horizon in years (default 10), the number of bootstrap paths (default 1000), and optional per-asset weight bounds between 0 and 1; a bound whose `min` is above its `max` is rejected with 400. Up to two jobs run at a time. Jobs are kept in memory only, so they are lost when the service restarts. `POST /predict` runs the same optimization synchronously, with the request fields wrapped in `data`.
+
 ## Testing
 
 Run unit tests with Poetry:
