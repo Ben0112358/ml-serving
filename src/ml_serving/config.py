@@ -11,7 +11,7 @@ ENV_VAR_CONFIG_PATH = os.environ.get("CONFIG_PATH")
 CONFIG = {}
 if ENV_VAR_CONFIG_PATH and pl.Path(ENV_VAR_CONFIG_PATH).exists():
     with open(ENV_VAR_CONFIG_PATH) as f:
-        CONFIG = yaml.safe_load(f)
+        CONFIG = yaml.safe_load(f) or {}
 
 MODEL_DIR = pl.Path(
     CONFIG.get("paths", {}).get("models")
