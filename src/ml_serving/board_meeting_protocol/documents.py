@@ -90,19 +90,12 @@ def build_document(
     return _fresh_odt(body, profile), _ODT_MEDIA
 
 
-def _heading_level(line: str) -> int | None:
-    if line.startswith("### "):
-        return 3
-    if line.startswith("## "):
-        return 2
-    if line.startswith("# "):
-        return 1
-    return None
-
-
-def _heading_text(line: str, level: int) -> str:
-    marker = f"{'#' * level} "
-    return line.removeprefix(marker).strip()
+def _split_heading(line: str) -> tuple[int | None, str]:
+    for level in (3, 2, 1):
+        marker = f"{'#' * level} "
+        if line.startswith(marker):
+            return level, line.removeprefix(marker).strip()
+    return None, line
 
 
 def _clone_docx(template: bytes, body: str) -> bytes:
@@ -153,8 +146,7 @@ def _add_docx_line(
     line: str,
     profile: DocumentStyle,
 ) -> None:
-    level = _heading_level(line)
-    text = _heading_text(line, level) if level else line
+    level, text = _split_heading(line)
     style_name = f"Heading {level}" if level else None
     if style_name and _has_style(document, style_name):
         paragraph = document.add_paragraph(text, style=style_name)
@@ -190,8 +182,7 @@ def _clone_odt(template: bytes, body: str) -> bytes:
     for child in list(text.childNodes):
         text.removeChild(child)
     for line in body.splitlines():
-        level = _heading_level(line)
-        content = _heading_text(line, level) if level else line
+        level, content = _split_heading(line)
         if level and heading_style:
             text.addElement(
                 H(outlinelevel=level, stylename=heading_style, text=content)
@@ -218,8 +209,7 @@ def _fresh_odt(body: str, profile: DocumentStyle) -> bytes:
         style.addElement(properties)
         document.styles.addElement(style)
     for line in body.splitlines():
-        level = _heading_level(line)
-        content = _heading_text(line, level) if level else line
+        _, content = _split_heading(line)
         paragraph = P(text=content)
         if profile.font_name or profile.font_size_pt:
             paragraph.setAttribute("stylename", "BoardBody")
@@ -255,8 +245,8 @@ def _fresh_pdf(body: str, profile: DocumentStyle) -> bytes:
     buffer = io.BytesIO()
     story = []
     for line in body.splitlines():
-        level = _heading_level(line)
-        content = escape(_heading_text(line, level) if level else line)
+        level, content = _split_heading(line)
+        content = escape(content)
         story.append(
             Paragraph(
                 content or "&nbsp;", heading_style if level else body_style
